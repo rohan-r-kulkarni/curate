@@ -8,6 +8,7 @@ class GraphClient():
     def __init__(self, url, username, password):
         self.db = Graph(url, auth=(username, password), secure=True)
         self.CULPA_URL = "https://culpa.info/"
+        self.dept_dict = None
 
     def run_query(self, query: str, **kwargs) -> dict:
         try:
@@ -16,6 +17,22 @@ class GraphClient():
             raise RuntimeError
         
         return res
+        
+    def generate_dept_dict(self):
+        if self.dept_dict is None: #not previously stored
+            dept_info_endpoint = self.CULPA_URL + "api/department/all"
+            dept_info = []
+            for dept_let in json.loads(requests.get(dept_info_endpoint).content)["departments"]:
+                dept_info.extend(dept_let["departmentsList"])
+            depts = dict([tuple([obj["departmentId"], obj["departmentName"]]) for obj in dept_info])
+            self.dept_dict = depts
+        return self.dept_dict
+
+    def get_dept_dict(self):
+        return self.generate_dept_dict()
+
+    def get_culpa_deptname_by_id(self, dept_id):
+        return self.generate_dept_dict()[dept_id]
 
     def get_culpa_professors_by_dept(self, dept_id):
         dept_endpoint = self.CULPA_URL + "api/department/" + str(dept_id)
@@ -24,10 +41,10 @@ class GraphClient():
 
     def create_professor(self, first_name, last_name, department, culpa_id=None):
         create_prof_query = f"""
-            CREATE (o: Prof {{
-                                fname: {first_name},
-                                lname: {last_name},
-                                dept: {department},
+            MERGE (o: Prof {{
+                                fname: "{first_name}",
+                                lname: "{last_name}",
+                                dept: "{department}",
                                 culpa_id: {culpa_id}
                             }})
         """

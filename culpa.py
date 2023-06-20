@@ -44,25 +44,16 @@ if __name__ == "__main__":
 
 
 
-    graph = GraphClient("neo4j+s://38ed1ee0.databases.neo4j.io", auth=(USERNAME, PASSWORD), secure=True)
+    graph = GraphClient("neo4j+s://38ed1ee0.databases.neo4j.io", USERNAME, PASSWORD)
 
 
     prof_review_endpoint = "api/review/get/professor/"
 
-    # for i in range(1000):
-    #     prof_info = json.loads(requests.get(culpa_url + prof_review_endpoint + str(i)).content)
+    depts = graph.get_dept_dict()
+    for k, dept in depts.items():
+        profs = graph.get_culpa_professors_by_dept(k)
 
+        for prof in profs:
+           graph.create_professor(prof["firstName"], prof["lastName"], dept, culpa_id = prof["professorId"])
 
-    #     for r in prof_json["reviews"]:
-    #         pprint(r)
-    #         break
-    # print()
-    # pprint(prof_json["reviews"][-1])
-
-
-    profs = graph.get_professors_by_dept(7)
-    for prof in profs:
-        graph.create_professor(prof["firstName"])
-        break
-
-
+    
