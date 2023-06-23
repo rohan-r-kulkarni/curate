@@ -67,3 +67,56 @@ class GraphClient():
         """
         res = self.run_query(create_course_query)
         return res
+
+    def create_department(self, dept_name, dept_code=None, culpa_id=None):
+        create_dept_query = f"""
+            MERGE (o: Dept {{
+                                name: "{dept_name}",
+                                code: "{dept_code}",
+                                culpa_id: "{culpa_id}"
+                            }})
+        """
+        res = self.run_query(create_dept_query)
+        return res
+    
+    def relate_course_dept(self, course_name, dept_name):
+        relate_course_dept_query = f"""
+            MATCH (d: Dept), (c: Course) 
+                WHERE d.name = "{dept_name}" AND c.name = "{course_name}" 
+            MERGE (d)-[: hasCourse]->(c) 
+            RETURN c,d 
+        """
+        res = self.run_query(relate_course_dept_query)
+        return res
+    
+    def create_student(self, username):
+        create_student_query = f"""
+            MERGE (o: Student {{
+                                username: "{username}",
+                                review_count: 0
+                            }})
+        """
+        res = self.run_query(create_student_query)
+        return res
+    
+    def relate_student_course(self, username, course_name):
+        relate_student_course_query = f"""
+            MATCH (s: Student) WITH s MATCH (c: Course) 
+                WHERE s.name = "{username}" AND c.name = "{course_name}" 
+            MERGE (s)-[: hasTaken]->(c) 
+            RETURN s,c 
+        """
+        res = self.run_query(relate_student_course_query)
+        return res
+
+    def relate_student_prof(self, username, prof_first_name, prof_last_name):
+        relate_student_prof_query = f"""
+            MATCH (s: Student) WITH s MATCH (p: Prof) 
+                WHERE s.name = "{username}" AND p.fname = "{prof_first_name}" AND p.lname = "{prof_last_name}"
+            MERGE (s)-[: hasHad]->(c) 
+            RETURN s,c 
+        """
+        res = self.run_query(relate_student_prof_query)
+        return res
+
+    

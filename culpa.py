@@ -50,22 +50,28 @@ if __name__ == "__main__":
         if USERNAME and PASSWORD is None:
             PASSWORD = getpass("Enter Password: ")
 
-
-
     graph = GraphClient("neo4j+s://38ed1ee0.databases.neo4j.io", USERNAME, PASSWORD)
 
-
-    prof_review_endpoint = "api/review/get/professor/"
+    depts = graph.get_dept_dict()
 
     #create professors
-    depts = graph.get_dept_dict()
-    # for k, dept in depts.items():
-    #     profs = graph.get_culpa_professors_by_dept(k)
+    """
+    for k, dept in depts.items():
+        profs = graph.get_culpa_professors_by_dept(k)
 
-    #     for prof in profs:
-    #        graph.create_professor(prof["firstName"], prof["lastName"], dept, culpa_id = prof["professorId"])
+        for prof in profs:
+           graph.create_professor(prof["firstName"], prof["lastName"], dept, culpa_id = prof["professorId"])
+    """
 
-    #create courses
+    #create departments
+    """
+    for k, dept in depts.items():
+        graph.create_department(dept, culpa_id=k)
+    """
+    
+
+    #create courses and relate them to depts
+    """
     dept_issues = []
     for k, dept in depts.items():
         courses = graph.get_culpa_courses_by_dept(k)
@@ -95,11 +101,21 @@ if __name__ == "__main__":
 
             try:
                 graph.create_course(course_depts, code, course_name, culpa_id = course["courseId"])
+                graph.relate_course_dept(course_name, dept)
             except RuntimeError:
+                print("Could not create course: ", end="")
                 print(course)
-
 
     with open("issues/orphan_courses.json", "w") as issue_file:
         json.dump(dept_issues, issue_file, indent=2)
+    """
 
-    
+    #create student
+    print(graph.create_student("culpa_student"))
+
+    #no need to make student-prof or student-course relationship (social connections), but should test it
+    print(graph.relate_student_course("culpa_student", "Applied Fundamental Analysis with Alternative Data"))
+    print(graph.relate_student_prof("culpa_student", "Yi", "Zhang"))
+
+
+    #create reviews
