@@ -50,3 +50,20 @@ class GraphClient():
         """
         res = self.run_query(create_prof_query)
         return res
+    
+    def get_culpa_courses_by_dept(self, dept_id):
+        dept_endpoint = self.CULPA_URL + "api/department/" + str(dept_id)
+        dept_content = json.loads(requests.get(dept_endpoint).content)
+        return dept_content["departmentCourses"]
+    
+    def create_course(self, course_dept, code, name, culpa_id=None):
+        create_course_query = f"""
+            MERGE (o: Course {{
+                                course_dept: "{course_dept}",
+                                code: "{code}",
+                                name: "{name}",
+                                culpa_id: {culpa_id}
+                            }})
+        """
+        res = self.run_query(create_course_query)
+        return res
