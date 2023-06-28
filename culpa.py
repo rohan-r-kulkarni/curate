@@ -34,6 +34,8 @@ def get_args() -> argparse.Namespace:
 def pprint(obj):
     print(json.dumps(obj, indent=2))
 
+
+
 if __name__ == "__main__":
     
     if SECRETS:
@@ -111,11 +113,51 @@ if __name__ == "__main__":
     """
 
     #create student
-    print(graph.create_student("culpa_student"))
+    # graph.create_student("culpa_student")
 
-    #no need to make student-prof or student-course relationship (social connections), but should test it
-    print(graph.relate_student_course("culpa_student", "Applied Fundamental Analysis with Alternative Data"))
-    print(graph.relate_student_prof("culpa_student", "Yi", "Zhang"))
+    # #no need to make student-prof or student-course relationship (social connections), but should test it
+    # graph.relate_student_course("culpa_student", "FOUNDATIONS OF DATA SCIENCE")
+    # graph.relate_student_prof("culpa_student", "Yi", "Zhang")
 
 
     #create reviews
+
+    # review_obj =   json.loads("""{
+    #     "content" : "REVIEW CONTENT",
+    #     "deprecated": false,
+    #     "reviewHeader": {
+    #         "courseCode": "COMS W3157",
+    #         "courseId": 4758,
+    #         "courseName": "Advanced Programming"
+    #     },
+    #     "reviewId": 83124,
+    #     "reviewType": "professor",
+    #     "submissionDate": "Apr 01, 2021",
+    #     "votes": {
+    #         "downvoteClicked": false,
+    #         "funnyClicked": false,
+    #         "initDownvoteCount": 0,
+    #         "initFunnyCount": 0,
+    #         "initUpvoteCount": 0,
+    #         "upvoteClicked": false
+    #     },
+    #     "workload": null
+    #     } """)
+    
+    # rev_id, review_s = parse_review(review_obj)
+
+    # graph.create_review("culpa_student", "Yi", "Zhang", "FOUNDATIONS OF DATA SCIENCE", json.dumps(review_obj), rev_id)
+
+    #create reviews for professors
+
+    for k, dept in depts.items():
+        dept = ""
+        profs = graph.get_culpa_professors_by_dept(k)
+
+        for prof in profs:
+           prof_revs = graph.get_culpa_reviews_by_prof_id(prof["professorId"])
+           if len(prof_revs) != 0:
+               print(prof_revs)
+               break
+
+    

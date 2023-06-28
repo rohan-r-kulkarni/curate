@@ -39,6 +39,22 @@ class GraphClient():
         dept_content = json.loads(requests.get(dept_endpoint).content)
         return dept_content["departmentProfessors"]
 
+    def get_culpa_reviews_by_prof_id(self, prof_id):
+        review_endpoint = self.CULPA_URL + "api/review/get/professor/" + str(prof_id)
+        review_content = json.loads(requests.get(review_endpoint).content)
+        return review_content["reviews"]
+
+    def parse_culpa_review(review_obj):
+        if type(review_obj) != str:
+            review_obj = json.loads(review_obj)
+        rev_id = review_obj["reviewId"]
+        del review_obj["reviewId"]
+        del review_obj["reviewType"]
+        course_id = review_obj["reviewHeader"]["courseId"]
+        del review_obj["reviewHeader"]
+        review_obj["date"] = review_obj.pop("submissionDate")
+        return rev_id, course_id, json.dumps(review_obj)
+
     def create_professor(self, first_name, last_name, department, culpa_id=None):
         create_prof_query = f"""
             MERGE (o: Prof {{
@@ -101,22 +117,37 @@ class GraphClient():
     
     def relate_student_course(self, username, course_name):
         relate_student_course_query = f"""
-            MATCH (s: Student) WITH s MATCH (c: Course) 
-                WHERE s.name = "{username}" AND c.name = "{course_name}" 
-            MERGE (s)-[: hasTaken]->(c) 
-            RETURN s,c 
+            MATCH (s: Student), (c: Course) WHERE s.username="{username}" AND c.name="{course_name}"
+            MERGE (s)-[: hasTaken]->(c) RETURN s,c;
         """
         res = self.run_query(relate_student_course_query)
         return res
 
     def relate_student_prof(self, username, prof_first_name, prof_last_name):
         relate_student_prof_query = f"""
-            MATCH (s: Student) WITH s MATCH (p: Prof) 
-                WHERE s.name = "{username}" AND p.fname = "{prof_first_name}" AND p.lname = "{prof_last_name}"
-            MERGE (s)-[: hasHad]->(c) 
-            RETURN s,c 
+            MATCH (s: Student), (p: Prof) WHERE s.username="{username}" AND p.fname = "{prof_first_name}" AND p.lname="{prof_last_name}"
+            MERGE (s)-[: hasHad]->(p) RETURN s,p;
         """
         res = self.run_query(relate_student_prof_query)
         return res
 
-    
+    def create_review(self, username, prof_first_name, prof_last_name, course_name, review, culpa_id=None):
+        """
+        The review object should be JSON-like string that contains unpackable information such as:
+        content, workload, date
+        from CULPA: deprecated, votes (likes, dislikes, funny, count)
+        Stored in graph DB as a JSON-like object
+        """
+        create_review_query = f"""
+            MERGE (r: Review {{
+                student_reviewer: "{username}",
+                prof_fname: "{prof_first_name}",
+                prof_lname: "{prof_last_name}",
+                course_name: "{course_name}",
+                info: '{review}',
+                culpa_id: "{culpa_id}"
+            }})
+        """
+        print(create_review_query)
+        res = self.run_query(create_review_query)
+        return res
