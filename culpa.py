@@ -152,12 +152,13 @@ if __name__ == "__main__":
 
     for k, dept in depts.items():
         dept = ""
-        profs = graph.get_culpa_professors_by_dept(k)
+        profs = graph.get_culpa_professors_by_dept(3)
 
         for prof in profs:
            prof_revs = graph.get_culpa_reviews_by_prof_id(prof["professorId"])
            if len(prof_revs) != 0:
-               print(prof_revs)
-               break
-
-    
+               for review in prof_revs:
+                    culpa_rev_id, course_name, info = graph.parse_culpa_review(review)
+                    info = info.replace("\'", "<APOS>")
+                    rev_res = graph.create_review("culpa_student", prof["firstName"], prof["lastName"], course_name, info, culpa_rev_id)
+        break   #this doesn't fully work, check edge cases

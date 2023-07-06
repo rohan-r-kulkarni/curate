@@ -44,16 +44,16 @@ class GraphClient():
         review_content = json.loads(requests.get(review_endpoint).content)
         return review_content["reviews"]
 
-    def parse_culpa_review(review_obj):
-        if type(review_obj) != str:
+    def parse_culpa_review(self, review_obj):
+        if type(review_obj) == str:
             review_obj = json.loads(review_obj)
         rev_id = review_obj["reviewId"]
         del review_obj["reviewId"]
         del review_obj["reviewType"]
-        course_id = review_obj["reviewHeader"]["courseId"]
+        course_name = review_obj["reviewHeader"]["courseName"]
         del review_obj["reviewHeader"]
         review_obj["date"] = review_obj.pop("submissionDate")
-        return rev_id, course_id, json.dumps(review_obj)
+        return rev_id, course_name, json.dumps(review_obj)
 
     def create_professor(self, first_name, last_name, department, culpa_id=None):
         create_prof_query = f"""
@@ -138,6 +138,8 @@ class GraphClient():
         from CULPA: deprecated, votes (likes, dislikes, funny, count)
         Stored in graph DB as a JSON-like object
         """
+        review.replace("\"", "\"\"\"")
+        review.replace("\"", "\"\"\"")
         create_review_query = f"""
             MERGE (r: Review {{
                 student_reviewer: "{username}",
@@ -148,6 +150,5 @@ class GraphClient():
                 culpa_id: "{culpa_id}"
             }})
         """
-        print(create_review_query)
         res = self.run_query(create_review_query)
         return res
